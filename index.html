@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agentic AI for Mental Health Awareness & Suicide Prevention</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --primary: #4a90d9;
+      --primary-dark: #2d6db5;
+      --accent: #7c5cd8;
+      --danger: #e05555;
+      --text: #1f2328;
+      --muted: #57606a;
+      --border: #d0d7de;
+      --bubble-user: #dbeafe;
+      --bubble-ai: #f0f4f8;
+      --crisis: #fff3cd;
+      --crisis-border: #f59e0b;
+    }
+
+    body {
+      font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #2d6db5 0%, #4a90d9 50%, #7c5cd8 100%);
+      color: #fff;
+      padding: 0 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+    }
+    .header-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 0;
+    }
+    .logo {
+      width: 46px; height: 46px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .logo svg { width: 26px; height: 26px; fill: #fff; }
+    .header-text h1 { font-size: 1.15rem; font-weight: 700; line-height: 1.3; }
+    .header-text p { font-size: 0.78rem; opacity: 0.85; margin-top: 2px; }
+    .crisis-btn {
+      margin-left: auto;
+      background: #e05555;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .crisis-btn:hover { background: #c0392b; }
+
+    /* ── Crisis Banner ── */
+    #crisis-banner {
+      display: none;
+      background: var(--crisis);
+      border-bottom: 2px solid var(--crisis-border);
+      padding: 12px 24px;
+    }
+    .crisis-inner {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    .crisis-inner svg { flex-shrink: 0; margin-top: 2px; }
+    .crisis-inner p { font-size: 0.88rem; line-height: 1.6; color: #7d4e00; }
+    .crisis-inner strong { color: #5c3400; }
+    .crisis-close {
+      margin-left: auto;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.2rem;
+      color: #7d4e00;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .crisis-close:hover { background: rgba(0,0,0,0.08); }
+
+    /* ── Main Layout ── */
+    main {
+      flex: 1;
+      max-width: 900px;
+      width: 100%;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex;
+      gap: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 6px;
+    }
+    .tab-btn {
+      flex: 1;
+      background: none;
+      border: none;
+      border-radius: 7px;
+      padding: 9px 12px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .tab-btn.active {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(74,144,217,0.35);
+    }
+    .tab-btn:not(.active):hover { background: var(--bg); color: var(--text); }
+
+    /* ── Tab Panels ── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: flex; flex-direction: column; gap: 16px; }
+
+    /* ── Chat ── */
+    .chat-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 480px;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 380px;
+      max-height: 480px;
+    }
+    .message {
+      display: flex;
+      gap: 10px;
+      max-width: 82%;
+      animation: fadeIn 0.25s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+    .message.user { flex-direction: row-reverse; margin-left: auto; }
+    .avatar {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.78rem; font-weight: 700;
+      flex-shrink: 0;
+    }
+    .avatar.ai { background: var(--primary); color: #fff; }
+    .avatar.user { background: var(--accent); color: #fff; }
+    .bubble {
+      padding: 11px 15px;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      line-height: 1.65;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .message.ai .bubble {
+      background: var(--bubble-ai);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+    }
+    .message.user .bubble {
+      background: var(--bubble-user);
+      border: 1px solid #bfdbfe;
+      border-top-right-radius: 4px;
+    }
+    .typing-indicator {
+      display: flex; align-items: center; gap: 5px;
+      padding: 11px 15px;
+      background: var(--bubble-ai);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      border-top-left-radius: 4px;
+      width: fit-content;
+    }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); animation: bounce 1.2s infinite; }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,60%,100%{transform:translateY(0);} 30%{transform:translateY(-7px);} }
+
+    .chat-input-area {
+      border-top: 1px solid var(--border);
+      padding: 14px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+      background: #fafbfc;
+    }
+    .chat-input-area textarea {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 0.92rem;
+      font-family: inherit;
+      resize: none;
+      min-height: 44px;
+      max-height: 120px;
+      outline: none;
+      background: #fff;
+      color: var(--text);
+      transition: border-color 0.2s;
+    }
+    .chat-input-area textarea:focus { border-color: var(--primary); }
+    .send-btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .send-btn:hover { background: var(--primary-dark); }
+    .send-btn:disabled { background: var(--border); cursor: not-allowed; }
+    .send-btn svg { width: 20px; height: 20px; fill: #fff; }
+
+    .quick-prompts {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 4px;
+    }
+    .quick-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      color: var(--primary-dark);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .quick-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    /* ── Info Cards ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .card-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 12px;
+    }
+    .card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 6px; }
+    .card p { font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Resources Panel ── */
+    .resource-list { display: flex; flex-direction: column; gap: 10px; }
+    .resource-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .resource-badge {
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .resource-badge.red { background: var(--danger); }
+    .resource-badge.purple { background: var(--accent); }
+    .resource-item strong { font-size: 0.9rem; display: block; margin-bottom: 2px; }
+    .resource-item span { font-size: 0.82rem; color: var(--muted); }
+
+    /* ── Disclaimer ── */
+    .disclaimer {
+      background: #fff8f0;
+      border: 1px solid #f9c26a;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 0.8rem;
+      color: #7d5200;
+      line-height: 1.6;
+    }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center;
+      padding: 14px;
+      font-size: 0.75rem;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    @media (max-width: 600px) {
+      .header-text h1 { font-size: 0.95rem; }
+      .crisis-btn { padding: 7px 10px; font-size: 0.75rem; }
+      .tabs { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+    </div>
+    <div class="header-text">
+      <h1>Agentic AI for Mental Health Awareness &amp; Suicide Prevention</h1>
+      <p>Compassionate AI support · Available 24/7 · Confidential</p>
+    </div>
+    <button class="crisis-btn" onclick="toggleCrisis()">🆘 Crisis Help</button>
+  </div>
+</header>
+
+<!-- ── CRISIS BANNER ── -->
+<div id="crisis-banner">
+  <div class="crisis-inner">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="#f59e0b"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+    <p>
+      <strong>If you are in immediate danger, please call emergency services (911 or local equivalent) right away.</strong><br/>
+      🇺🇸 <strong>National Suicide Prevention Lifeline:</strong> <strong>988</strong> (call or text) &nbsp;|&nbsp;
+      🌍 <strong>International Association for Suicide Prevention:</strong> <a href="https://www.iasp.info/resources/Crisis_Centres/" target="_blank" style="color:#7d4e00">Find a crisis centre</a><br/>
+      🇺🇸 <strong>Crisis Text Line:</strong> Text HOME to <strong>741741</strong> &nbsp;|&nbsp;
+      🇬🇧 <strong>Samaritans:</strong> <strong>116 123</strong>
+    </p>
+    <button class="crisis-close" onclick="toggleCrisis()" title="Close">✕</button>
+  </div>
+</div>
+
+<!-- ── MAIN ── -->
+<main>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('chat', this)">💬 AI Companion</button>
+    <button class="tab-btn" onclick="switchTab('awareness', this)">🧠 Awareness</button>
+    <button class="tab-btn" onclick="switchTab('resources', this)">📞 Resources</button>
+  </div>
+
+  <!-- ── TAB: CHAT ── -->
+  <div id="tab-chat" class="tab-panel active">
+    <div class="disclaimer">
+      ⚠️ <strong>Important:</strong> This AI companion is for emotional support and mental health awareness only. It is <strong>not</strong> a substitute for professional mental health care. If you are in crisis, please use the <strong>🆘 Crisis Help</strong> button above.
+    </div>
+
+    <div class="quick-prompts">
+      <button class="quick-btn" onclick="sendQuick('I\'ve been feeling really anxious lately')">😰 Feeling anxious</button>
+      <button class="quick-btn" onclick="sendQuick('I feel very lonely and isolated')">😔 Feeling lonely</button>
+      <button class="quick-btn" onclick="sendQuick('How can I manage stress better?')">🧘 Manage stress</button>
+      <button class="quick-btn" onclick="sendQuick('What are signs of depression?')">🔍 Signs of depression</button>
+      <button class="quick-btn" onclick="sendQuick('How do I support a friend in crisis?')">🤝 Help a friend</button>
+      <button class="quick-btn" onclick="sendQuick('Tell me about mindfulness techniques')">🌿 Mindfulness</button>
+    </div>
+
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <!-- Welcome message -->
+        <div class="message ai">
+          <div class="avatar ai">AI</div>
+          <div class="bubble">Hello 👋 I'm your compassionate AI companion for mental health support. I'm here to listen, provide information, and help guide you toward resources when needed.
+
+You can talk to me about:
+• Anxiety, stress, or depression
+• Coping strategies and mindfulness
+• Warning signs to watch for
+• How to support someone you care about
+
+<strong>Remember:</strong> If you're in immediate danger, please click the <strong>🆘 Crisis Help</strong> button at the top. What's on your mind today?</div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <textarea id="userInput" placeholder="Share what's on your mind…" rows="1"
+          onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()">
+          <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: AWARENESS ── -->
+  <div id="tab-awareness" class="tab-panel">
+    <div class="cards-grid">
+      <div class="card">
+        <div class="card-icon" style="background:#dbeafe">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#2d6db5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+        </div>
+        <h3>Recognising Warning Signs</h3>
+        <p>Withdrawal from friends/family, drastic mood swings, giving away possessions, talking about hopelessness, or sudden calmness after depression can be warning signs.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#f3e8ff">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#7c5cd8"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
+        </div>
+        <h3>How to Help Someone</h3>
+        <p>Listen without judgment. Ask directly about suicidal thoughts — it helps. Remove access to lethal means. Stay with them and connect them to professional help immediately.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#dcfce7">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#16a34a"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+        </div>
+        <h3>Self-Care Strategies</h3>
+        <p>Regular sleep, balanced nutrition, physical activity, mindfulness meditation, journaling, and maintaining social connections are proven mental health boosters.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#fff3cd">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#d97706"><path d="M12 3L1 9l11 6 9-4.91V17h2V9L12 3zM5 13.18v4L12 21l7-3.82v-4L12 17l-7-3.82z"/></svg>
+        </div>
+        <h3>Breaking the Stigma</h3>
+        <p>Mental health conditions are medical issues, not weaknesses. Open, empathetic conversations reduce stigma and encourage people to seek the help they deserve.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#fee2e2">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#dc2626"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z"/></svg>
+        </div>
+        <h3>Talking to a Professional</h3>
+        <p>Therapists, counsellors, and psychiatrists are trained to help. Asking for help is a sign of strength. Many services are available online, by phone, or in-person.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#e0f2fe">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="#0284c7"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+        </div>
+        <h3>Understanding Depression</h3>
+        <p>Depression is more than sadness. It affects sleep, appetite, concentration, and energy. It's treatable with therapy, medication, lifestyle changes, or a combination.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── TAB: RESOURCES ── -->
+  <div id="tab-resources" class="tab-panel">
+    <div class="resource-list">
+      <div class="resource-item">
+        <span class="resource-badge red">CRISIS</span>
+        <div>
+          <strong>988 Suicide & Crisis Lifeline (USA)</strong>
+          <span>Call or text <strong>988</strong> · Available 24/7 · Free & Confidential</span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge red">CRISIS</span>
+        <div>
+          <strong>Crisis Text Line (USA / UK / Canada / Ireland)</strong>
+          <span>Text HOME to <strong>741741</strong> to reach a trained crisis counsellor</span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge red">CRISIS</span>
+        <div>
+          <strong>Samaritans (UK & Ireland)</strong>
+          <span>Call <strong>116 123</strong> · Available 24/7 · Free & Confidential</span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge">GLOBAL</span>
+        <div>
+          <strong>International Association for Suicide Prevention</strong>
+          <span>Find a crisis centre near you: <a href="https://www.iasp.info/resources/Crisis_Centres/" target="_blank">iasp.info</a></span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge purple">SUPPORT</span>
+        <div>
+          <strong>NAMI Helpline (National Alliance on Mental Illness)</strong>
+          <span>Call <strong>1-800-950-6264</strong> · Mon–Fri 10am–10pm ET</span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge purple">SUPPORT</span>
+        <div>
+          <strong>SAMHSA National Helpline</strong>
+          <span>Call <strong>1-800-662-4357</strong> · 24/7 · Free, confidential treatment referrals</span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge">ONLINE</span>
+        <div>
+          <strong>7 Cups of Tea</strong>
+          <span>Free online chat with trained listeners: <a href="https://www.7cups.com" target="_blank">7cups.com</a></span>
+        </div>
+      </div>
+      <div class="resource-item">
+        <span class="resource-badge">ONLINE</span>
+        <div>
+          <strong>MindLine (UK)</strong>
+          <span>Free, safe online support community: <a href="https://www.mindline.org.uk" target="_blank">mindline.org.uk</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  &copy; 2025 Agentic AI for Mental Health Awareness &amp; Suicide Prevention &nbsp;|&nbsp;
+  This tool is for informational support only. Always seek professional help when needed.
+</footer>
+
+<script>
+  // ── Gemini API Config ──
+  const API_KEY  = "AQ.Ab8RN6LDcV-KPict3xiVt01VzCWo94ipaheGllR94Et-pKOCrA";
+  const MODEL    = "gemini-3.5-flash-lite";
+  const API_URL  = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+  const SYSTEM_PROMPT = `You are a compassionate, empathetic AI companion specialising in mental health awareness and suicide prevention. Your role is to:
+1. Listen actively and respond with empathy and without judgment.
+2. Provide accurate, helpful information about mental health topics.
+3. Recognise warning signs of crisis and always direct users to professional help or crisis hotlines when needed.
+4. Encourage professional support — you are a complement to, not a replacement for, professional care.
+5. Never provide harmful information. Always prioritise safety.
+6. Use a warm, supportive, and non-clinical tone while remaining accurate.
+7. If a user expresses suicidal ideation, immediately provide crisis resources (988 in the USA, 116 123 in the UK, or the Crisis Text Line: text HOME to 741741).
+Keep responses concise (2–4 paragraphs) and compassionate.`;
+
+  let conversationHistory = [];
+
+  // ── Tab Switching ──
+  function switchTab(name, btn) {
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  // ── Crisis Banner ──
+  function toggleCrisis() {
+    const b = document.getElementById('crisis-banner');
+    b.style.display = b.style.display === 'block' ? 'none' : 'block';
+  }
+
+  // ── Auto-resize textarea ──
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+  }
+
+  // ── Enter key to send ──
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  // ── Quick prompts ──
+  function sendQuick(text) {
+    document.getElementById('userInput').value = text;
+    sendMessage();
+  }
+
+  // ── Append a message bubble ──
+  function appendMessage(role, text) {
+    const container = document.getElementById('chatMessages');
+    const wrap = document.createElement('div');
+    wrap.className = 'message ' + role;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar ' + role;
+    avatar.textContent = role === 'ai' ? 'AI' : 'You';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble';
+    bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(bubble);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+    return bubble;
+  }
+
+  // ── Typing indicator ──
+  function showTyping() {
+    const container = document.getElementById('chatMessages');
+    const wrap = document.createElement('div');
+    wrap.className = 'message ai';
+    wrap.id = 'typingWrap';
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar ai';
+    avatar.textContent = 'AI';
+
+    const indicator = document.createElement('div');
+    indicator.className = 'typing-indicator';
+    indicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+
+    wrap.appendChild(avatar);
+    wrap.appendChild(indicator);
+    container.appendChild(wrap);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  function hideTyping() {
+    const el = document.getElementById('typingWrap');
+    if (el) el.remove();
+  }
+
+  // ── Main send function ──
+  async function sendMessage() {
+    const input = document.getElementById('userInput');
+    const btn   = document.getElementById('sendBtn');
+    const text  = input.value.trim();
+    if (!text) return;
+
+    // Append user message
+    appendMessage('user', text);
+    input.value = '';
+    input.style.height = 'auto';
+    btn.disabled = true;
+
+    // Add to history
+    conversationHistory.push({ role: 'user', parts: [{ text }] });
+
+    // Show typing
+    showTyping();
+
+    try {
+      const body = {
+        system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+        contents: conversationHistory
+      };
+
+      const res  = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err?.error?.message || `HTTP ${res.status}`);
+      }
+
+      const data   = await res.json();
+      const reply  = data?.candidates?.[0]?.content?.parts?.[0]?.text
+                     || "I'm here for you. Could you tell me a bit more about what you're experiencing?";
+
+      conversationHistory.push({ role: 'model', parts: [{ text: reply }] });
+
+      hideTyping();
+      appendMessage('ai', reply);
+
+      // Auto-show crisis banner for high-risk keywords
+      const lower = text.toLowerCase();
+      const crisisWords = ['suicide', 'kill myself', 'end my life', 'want to die', 'self harm', 'hurt myself'];
+      if (crisisWords.some(w => lower.includes(w))) {
+        document.getElementById('crisis-banner').style.display = 'block';
+      }
+
+    } catch (err) {
+      hideTyping();
+      appendMessage('ai', `⚠️ I'm having trouble connecting right now. Please try again in a moment.\n\nIf you are in crisis, please call <strong>988</strong> (USA) or text HOME to <strong>741741</strong> immediately.\n\n<em>Error: ${err.message}</em>`);
+    }
+
+    btn.disabled = false;
+    input.focus();
+  }
+</script>
+</body>
+</html>
